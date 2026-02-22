@@ -1,0 +1,682 @@
+{
+  "2026-02": [
+    {
+      "reportId": 12,
+      "version": 1,
+      "status": "draft",
+      "columns": [
+        {
+          "id": 1,
+          "name": "Karnataka",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 2,
+          "name": "Kerala",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 3,
+          "name": "Lakshadweep",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 4,
+          "name": "Puducherry",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 5,
+          "name": "Tamil Nadu",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 6,
+          "name": "Total of RO",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 7,
+          "name": "Remarks",
+          "type": "text",
+          "dimensions": { "width": "200px", "height": "50px" }
+        }
+      ],
+      "rows": [
+        {
+          "id": 1,
+          "name": "Enrollment Kits Operators Currently Operational & Inspection Details",
+          "children": [
+            {
+              "id": 2,
+              "name": "Total Enrollment kits Operational (ECMP/UCL)",
+              "values": {
+                "1": 3308,
+                "2": 3003,
+                "3": 14,
+                "4": 83,
+                "5": 3275,
+                "6": 9683,
+                "7": ""
+              }
+            },
+            {
+              "id": 3,
+              "name": "Total CELC Kits Currently Operational",
+              "values": {
+                "1": 1131,
+                "2": 439,
+                "3": 0,
+                "4": 55,
+                "5": 2064,
+                "6": 3689,
+                "7": ""
+              }
+            },
+            {
+              "id": 4,
+              "name": "No of UCL clients being used",
+              "values": {
+                "1": 708,
+                "2": 560,
+                "3": 0,
+                "4": 83,
+                "5": 3275,
+                "6": 4626,
+                "7": ""
+              }
+            },
+            {
+              "id": 5,
+              "name": "No of Inspections done in the month",
+              "values": {
+                "1": 29,
+                "2": 34,
+                "3": 0,
+                "4": 22,
+                "5": 90,
+                "6": 175,
+                "7": ""
+              }
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "name": "Total Enrollment / Update and Footfall",
+          "children": [
+            {
+              "id": 7,
+              "name": "Total Enrollment",
+              "values": {
+                "1": 114566,
+                "2": 49109,
+                "3": 59,
+                "4": 2323,
+                "5": 117845,
+                "6": 283902,
+                "7": ""
+              }
+            },
+            {
+              "id": 8,
+              "name": "Total Child (0-5 years age group) Aadhaar Generation",
+              "values": {
+                "1": 66251,
+                "2": 41132,
+                "3": 865,
+                "4": 14115,
+                "5": 845200,
+                "6": 1037563,
+                "7": ""
+              }
+            },
+            {
+              "id": 9,
+              "name": "Total Update",
+              "values": {
+                "1": 24548,
+                "2": 14318,
+                "3": 42,
+                "4": 360,
+                "5": 11151,
+                "6": 50419,
+                "7": ""
+              }
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "name": "Quality & Compliance",
+          "children": [
+            {
+              "id": 11,
+              "name": "No of Rejected Applications",
+              "values": {
+                "1": 45,
+                "2": 30,
+                "3": 1,
+                "4": 5,
+                "5": 52,
+                "6": 133,
+                "7": ""
+              }
+            },
+            {
+              "id": 12,
+              "name": "No of Pending Approvals",
+              "values": {
+                "1": 78,
+                "2": 61,
+                "3": 2,
+                "4": 11,
+                "5": 83,
+                "6": 235,
+                "7": ""
+              }
+            },
+            {
+              "id": 13,
+              "name": "Escalations Raised",
+              "values": {
+                "1": 5,
+                "2": 3,
+                "3": 0,
+                "4": 1,
+                "5": 6,
+                "6": 15,
+                "7": ""
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "2026-01": [
+    {
+      "reportId": 12,
+      "version": 1,
+      "status": "draft",
+      "columns": [
+        {
+          "id": 1,
+          "name": "Karnataka",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 2,
+          "name": "Kerala",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 3,
+          "name": "Lakshadweep",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 4,
+          "name": "Puducherry",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 5,
+          "name": "Tamil Nadu",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 6,
+          "name": "Total of RO",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 7,
+          "name": "Remarks",
+          "type": "text",
+          "dimensions": { "width": "200px", "height": "50px" }
+        }
+      ],
+      "rows": [
+        {
+          "id": 14,
+          "name": "Infrastructure & Logistics",
+          "children": [
+            {
+              "id": 15,
+              "name": "New Centers Opened in the Month",
+              "values": {
+                "1": 12,
+                "2": 8,
+                "3": 0,
+                "4": 3,
+                "5": 15,
+                "6": 38,
+                "7": ""
+              }
+            },
+            {
+              "id": 16,
+              "name": "Centers Closed in the Month",
+              "values": {
+                "1": 3,
+                "2": 2,
+                "3": 0,
+                "4": 1,
+                "5": 4,
+                "6": 10,
+                "7": ""
+              }
+            },
+            {
+              "id": 17,
+              "name": "Biometric Devices Procured",
+              "values": {
+                "1": 45,
+                "2": 30,
+                "3": 2,
+                "4": 6,
+                "5": 50,
+                "6": 133,
+                "7": ""
+              }
+            },
+            {
+              "id": 18,
+              "name": "Devices Under Maintenance",
+              "values": {
+                "1": 21,
+                "2": 14,
+                "3": 1,
+                "4": 4,
+                "5": 18,
+                "6": 58,
+                "7": ""
+              }
+            }
+          ]
+        },
+        {
+          "id": 19,
+          "name": "Human Resources",
+          "children": [
+            {
+              "id": 20,
+              "name": "Total Active Operators",
+              "values": {
+                "1": 4100,
+                "2": 3050,
+                "3": 22,
+                "4": 140,
+                "5": 3980,
+                "6": 11292,
+                "7": ""
+              }
+            },
+            {
+              "id": 21,
+              "name": "New Operators Onboarded",
+              "values": {
+                "1": 85,
+                "2": 60,
+                "3": 1,
+                "4": 9,
+                "5": 102,
+                "6": 257,
+                "7": ""
+              }
+            },
+            {
+              "id": 22,
+              "name": "Operators Resigned",
+              "values": {
+                "1": 32,
+                "2": 18,
+                "3": 0,
+                "4": 3,
+                "5": 29,
+                "6": 82,
+                "7": ""
+              }
+            },
+            {
+              "id": 23,
+              "name": "Trainings Conducted",
+              "values": {
+                "1": 14,
+                "2": 11,
+                "3": 0,
+                "4": 2,
+                "5": 16,
+                "6": 43,
+                "7": ""
+              }
+            }
+          ]
+        },
+        {
+          "id": 24,
+          "name": "Financial & Revenue Metrics",
+          "children": [
+            {
+              "id": 25,
+              "name": "Revenue Generated (in Lakhs)",
+              "values": {
+                "1": 125.6,
+                "2": 98.4,
+                "3": 1.2,
+                "4": 5.8,
+                "5": 140.3,
+                "6": 371.3,
+                "7": ""
+              }
+            },
+            {
+              "id": 26,
+              "name": "Operational Expenses (in Lakhs)",
+              "values": {
+                "1": 82.3,
+                "2": 64.1,
+                "3": 0.9,
+                "4": 3.5,
+                "5": 90.6,
+                "6": 241.4,
+                "7": ""
+              }
+            },
+            {
+              "id": 27,
+              "name": "Net Profit (in Lakhs)",
+              "values": {
+                "1": 43.3,
+                "2": 34.3,
+                "3": 0.3,
+                "4": 2.3,
+                "5": 49.7,
+                "6": 129.9,
+                "7": ""
+              }
+            },
+            {
+              "id": 28,
+              "name": "Pending Payments from Clients",
+              "values": {
+                "1": 12.5,
+                "2": 9.3,
+                "3": 0.1,
+                "4": 0.6,
+                "5": 14.8,
+                "6": 37.3,
+                "7": ""
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "2025-12": [
+    {
+      "reportId": 13,
+      "version": 1,
+      "status": "submitted",
+      "columns": [
+        {
+          "id": 1,
+          "name": "Karnataka",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 2,
+          "name": "Kerala",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 3,
+          "name": "Lakshadweep",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 4,
+          "name": "Puducherry",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 5,
+          "name": "Tamil Nadu",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 6,
+          "name": "Total of RO",
+          "type": "number",
+          "dimensions": { "width": "90px", "height": "30px" }
+        },
+        {
+          "id": 7,
+          "name": "Remarks",
+          "type": "text",
+          "dimensions": { "width": "200px", "height": "50px" }
+        }
+      ],
+      "rows": [
+        {
+          "id": 1,
+          "name": "Enrollment Infrastructure Status",
+          "children": [
+            {
+              "id": 2,
+              "name": "Total Active Enrollment Centers",
+              "values": {
+                "1": 1520,
+                "2": 980,
+                "3": 18,
+                "4": 75,
+                "5": 1654,
+                "6": 4247,
+                "7": ""
+              }
+            },
+            {
+              "id": 3,
+              "name": "Temporary Camps Conducted",
+              "values": {
+                "1": 45,
+                "2": 38,
+                "3": 2,
+                "4": 6,
+                "5": 51,
+                "6": 142,
+                "7": ""
+              }
+            },
+            {
+              "id": 4,
+              "name": "Mobile Units Operational",
+              "values": {
+                "1": 120,
+                "2": 84,
+                "3": 3,
+                "4": 11,
+                "5": 136,
+                "6": 354,
+                "7": ""
+              }
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "name": "Enrollment & Updates Summary",
+          "children": [
+            {
+              "id": 6,
+              "name": "New Aadhaar Enrollments",
+              "values": {
+                "1": 102340,
+                "2": 61220,
+                "3": 420,
+                "4": 3925,
+                "5": 118900,
+                "6": 286805,
+                "7": ""
+              }
+            },
+            {
+              "id": 7,
+              "name": "Mandatory Biometric Updates",
+              "values": {
+                "1": 18450,
+                "2": 11230,
+                "3": 75,
+                "4": 540,
+                "5": 20980,
+                "6": 51275,
+                "7": ""
+              }
+            },
+            {
+              "id": 8,
+              "name": "Demographic Updates",
+              "values": {
+                "1": 9630,
+                "2": 7150,
+                "3": 22,
+                "4": 260,
+                "5": 11870,
+                "6": 28932,
+                "7": ""
+              }
+            }
+          ]
+        },
+        {
+          "id": 9,
+          "name": "Child Enrollment (0–5 Years)",
+          "children": [
+            {
+              "id": 10,
+              "name": "Total Child Enrollments",
+              "values": {
+                "1": 54210,
+                "2": 36840,
+                "3": 510,
+                "4": 12560,
+                "5": 79210,
+                "6": 183330,
+                "7": ""
+              }
+            },
+            {
+              "id": 11,
+              "name": "Rejected Child Applications",
+              "values": {
+                "1": 32,
+                "2": 21,
+                "3": 1,
+                "4": 3,
+                "5": 40,
+                "6": 97,
+                "7": ""
+              }
+            }
+          ]
+        },
+        {
+          "id": 12,
+          "name": "Compliance & Monitoring",
+          "children": [
+            {
+              "id": 13,
+              "name": "Internal Audits Conducted",
+              "values": {
+                "1": 18,
+                "2": 12,
+                "3": 0,
+                "4": 3,
+                "5": 20,
+                "6": 53,
+                "7": ""
+              }
+            },
+            {
+              "id": 14,
+              "name": "Show Cause Notices Issued",
+              "values": {
+                "1": 7,
+                "2": 5,
+                "3": 0,
+                "4": 1,
+                "5": 8,
+                "6": 21,
+                "7": ""
+              }
+            },
+            {
+              "id": 15,
+              "name": "Penalties Imposed",
+              "values": {
+                "1": 3,
+                "2": 2,
+                "3": 0,
+                "4": 0,
+                "5": 4,
+                "6": 9,
+                "7": ""
+              }
+            }
+          ]
+        },
+        {
+          "id": 16,
+          "name": "Grievance & Escalation",
+          "children": [
+            {
+              "id": 17,
+              "name": "Complaints Received",
+              "values": {
+                "1": 145,
+                "2": 118,
+                "3": 2,
+                "4": 9,
+                "5": 162,
+                "6": 436,
+                "7": ""
+              }
+            },
+            {
+              "id": 18,
+              "name": "Complaints Resolved",
+              "values": {
+                "1": 132,
+                "2": 110,
+                "3": 2,
+                "4": 8,
+                "5": 150,
+                "6": 402,
+                "7": ""
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

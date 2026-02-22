@@ -1,0 +1,381 @@
+🏗 1️⃣ Core Master Tables
+1. ro_master
+
+Stores Regional Offices.
+
+CREATE TABLE ro_master (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(150) NOT NULL,
+    code VARCHAR(50) UNIQUE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+2. report_master
+
+One record per month per RO.
+
+CREATE TABLE report_master (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    ro_id INT NOT NULL,
+    month TINYINT NOT NULL,      -- 1-12
+    year SMALLINT NOT NULL,
+    status ENUM('draft','submitted','approved','rejected') DEFAULT 'draft',
+    version INT DEFAULT 1,
+    submitted_by INT NULL,
+    submitted_at DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY unique_report (ro_id, month, year),
+
+    FOREIGN KEY (ro_id) REFERENCES ro_master(id)
+);
+
+Why unique key?
+
+👉 Prevent duplicate monthly reports for same RO.
+
+⚙️ 2️⃣ Configuration Tables (Dynamic Structure)
+
+These are managed from separate config page.
+
+3. report_row_config
+
+Stores all rows including section headers and child rows.
+
+CREATE TABLE report_row_config (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    parent_id INT NULL,
+    display_order INT NOT NULL,
+    level INT DEFAULT 0,
+    is_section BOOLEAN DEFAULT FALSE,
+    is_editable BOOLEAN DEFAULT TRUE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (parent_id) REFERENCES report_row_config(id)
+);
+Important columns:
+Column	Purpose
+parent_id	For hierarchy
+level	For UI indentation
+is_section	Full-width header row
+is_editable	Prevent editing
+display_order	Ordering
+4. report_column_config
+
+Dynamic columns like Karnataka, Kerala, etc.
+
+CREATE TABLE report_column_config (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(150) NOT NULL,
+    display_order INT NOT NULL,
+    data_type ENUM('number','text') DEFAULT 'number',
+    is_total_column BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+📊 3️⃣ Cell Data Table (Most Important)
+5. report_cell_data
+
+This stores only actual editable cells.
+
+CREATE TABLE report_cell_data (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    report_id BIGINT NOT NULL,
+    row_id INT NOT NULL,
+    column_id INT NOT NULL,
+    value DECIMAL(18,2) NULL,
+    text_value TEXT NULL,
+    updated_by INT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    UNIQUE KEY unique_cell (report_id, row_id, column_id),
+
+    FOREIGN KEY (report_id) REFERENCES report_master(id),
+    FOREIGN KEY (row_id) REFERENCES report_row_config(id),
+    FOREIGN KEY (column_id) REFERENCES report_column_config(id)
+);
+Why separate value + text_value?
+
+Because:
+
+Most columns numeric
+
+Remarks column text
+
+Keeps structure clean
+
+Easier indexing
+
+📝 4️⃣ Submission Remarks Table
+
+You said remarks mandatory at submit.
+
+We should not store that inside report_master directly if we want history.
+
+6. report_submission_log
+CREATE TABLE report_submission_log (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    report_id BIGINT NOT NULL,
+    action ENUM('submitted','approved','rejected') NOT NULL,
+    remarks TEXT NOT NULL,
+    action_by INT NOT NULL,
+    action_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (report_id) REFERENCES report_master(id)
+);
+
+This gives:
+
+Full audit trail
+
+Approval history
+
+Rejection remarks
+
+Who did what
+
+Enterprise-grade.
+
+⚡ Index Strategy (Performance Critical)
+
+Add these:
+
+CREATE INDEX idx_report_lookup 
+ON report_master (ro_id, month, year);
+
+CREATE INDEX idx_cell_report 
+ON report_cell_data (report_id);
+
+CREATE INDEX idx_row_parent 
+ON report_row_config (parent_id);
+🔥 How It Works Together
+
+When GET report:
+
+Fetch report_master
+
+Fetch row_config (ordered)
+
+Fetch column_config (ordered)
+
+Fetch cell_data WHERE report_id = ?
+
+Backend joins and builds JSON.
+
+🧠 Why This Schema Is Correct
+Requirement	Covered?
+Dynamic rows	✅
+Dynamic columns	✅
+Hierarchical	✅
+Monthly per RO	✅
+Concurrent editing	✅ (version)
+Cell-level update	✅
+Submit workflow	✅
+Audit logs	✅
+Scalable	✅
+🚫 What We DID NOT Do (And Why)
+
+We did NOT:
+
+store entire report as JSON
+
+Because:
+
+Bad for SQL aggregation
+
+Hard to index
+
+Hard to update single cell
+
+Poor concurrency handling
+
+💡 If You Want Next Level
+
+We can discuss:
+
+Partitioning by year
+
+Archival strategy
+
+Materialized totals
+
+Soft delete strategy
+
+Row-level permission design
+
+Optimistic locking using version column
+
+Scaling to 1000+ ROs
+
+Now let me test you:
+
+If report has 500 rows × 10 columns = 5000 cells
+And 200 ROs submit monthly
+
+How many rows will report_cell_data have per year approximately?
+
+Calculate it.
+
+can you give insert queries with dummy data
+
+Perfect 👍 I’ll give you clean dummy insert queries in correct order (respecting foreign keys).
+
+We’ll insert:
+
+RO
+
+Row configuration (with hierarchy)
+
+Column configuration
+
+One monthly report
+
+Cell data
+
+Submission log
+
+I’ll assume:
+
+Karnataka = column_id 1
+
+Kerala = column_id 2
+
+Lakshadweep = column_id 3
+
+Puducherry = column_id 4
+
+Tamil Nadu = column_id 5
+
+Total of RO = column_id 6
+
+Remarks = column_id 7
+
+🔹 1️⃣ Insert RO
+INSERT INTO ro_master (id, name, code)
+VALUES (1, 'RO Bengaluru', 'RO_BLURU');
+🔹 2️⃣ Insert Column Config
+INSERT INTO report_column_config (id, name, display_order, data_type, is_total_column)
+VALUES
+(1, 'Karnataka', 1, 'number', FALSE),
+(2, 'Kerala', 2, 'number', FALSE),
+(3, 'Lakshadweep', 3, 'number', FALSE),
+(4, 'Puducherry', 4, 'number', FALSE),
+(5, 'Tamil Nadu', 5, 'number', FALSE),
+(6, 'Total of RO', 6, 'number', TRUE),
+(7, 'Remarks', 7, 'text', FALSE);
+🔹 3️⃣ Insert Row Config (Hierarchy)
+Section 1
+INSERT INTO report_row_config 
+(id, name, parent_id, display_order, level, is_section, is_editable)
+VALUES
+(1, 'Enrollment Kits Operators Currently Operational & Inspection Details', NULL, 1, 0, TRUE, FALSE),
+
+(2, 'Total Enrollment kits Operational (ECMP/UCL)', 1, 1, 1, FALSE, TRUE),
+(3, 'Total CELC Kits Currently Operational', 1, 2, 1, FALSE, TRUE),
+(4, 'No of UCL clients being used', 1, 3, 1, FALSE, TRUE),
+(5, 'No of Inspections done in the month', 1, 4, 1, FALSE, TRUE);
+Section 2
+INSERT INTO report_row_config 
+(id, name, parent_id, display_order, level, is_section, is_editable)
+VALUES
+(6, 'Total Enrollment / Update and Footfall', NULL, 2, 0, TRUE, FALSE),
+
+(7, 'Total Enrollment', 6, 1, 1, FALSE, TRUE),
+(8, 'Total Child (0-5 years age group) Aadhaar Generation', 6, 2, 1, FALSE, TRUE),
+(9, 'Total Update', 6, 3, 1, FALSE, TRUE);
+Section 3
+INSERT INTO report_row_config 
+(id, name, parent_id, display_order, level, is_section, is_editable)
+VALUES
+(10, 'Quality & Compliance', NULL, 3, 0, TRUE, FALSE),
+
+(11, 'No of Rejected Applications', 10, 1, 1, FALSE, TRUE),
+(12, 'No of Pending Approvals', 10, 2, 1, FALSE, TRUE),
+(13, 'Escalations Raised', 10, 3, 1, FALSE, TRUE);
+🔹 4️⃣ Insert Monthly Report
+
+Example: June 2026
+
+INSERT INTO report_master 
+(id, ro_id, month, year, status, version)
+VALUES
+(1001, 1, 6, 2026, 'draft', 1);
+🔹 5️⃣ Insert Cell Data
+
+We only insert child rows (not section headers).
+
+Row 2 (Total Enrollment kits Operational)
+INSERT INTO report_cell_data (report_id, row_id, column_id, value)
+VALUES
+(1001, 2, 1, 3308),
+(1001, 2, 2, 3003),
+(1001, 2, 3, 14),
+(1001, 2, 4, 83),
+(1001, 2, 5, 3275),
+(1001, 2, 6, 9683);
+Row 3
+INSERT INTO report_cell_data (report_id, row_id, column_id, value)
+VALUES
+(1001, 3, 1, 1131),
+(1001, 3, 2, 439),
+(1001, 3, 3, 0),
+(1001, 3, 4, 55),
+(1001, 3, 5, 2064),
+(1001, 3, 6, 3689);
+Row 7 (Total Enrollment)
+INSERT INTO report_cell_data (report_id, row_id, column_id, value)
+VALUES
+(1001, 7, 1, 114566),
+(1001, 7, 2, 49109),
+(1001, 7, 3, 59),
+(1001, 7, 4, 2323),
+(1001, 7, 5, 117845),
+(1001, 7, 6, 283902);
+Row 8
+INSERT INTO report_cell_data (report_id, row_id, column_id, value)
+VALUES
+(1001, 8, 1, 66251),
+(1001, 8, 2, 41132),
+(1001, 8, 3, 865),
+(1001, 8, 4, 14115),
+(1001, 8, 5, 845200),
+(1001, 8, 6, 1037563);
+Row 9
+INSERT INTO report_cell_data (report_id, row_id, column_id, value)
+VALUES
+(1001, 9, 1, 24548),
+(1001, 9, 2, 14318),
+(1001, 9, 3, 42),
+(1001, 9, 4, 360),
+(1001, 9, 5, 11151),
+(1001, 9, 6, 50419);
+🔹 6️⃣ Submission Log (Optional Example)
+INSERT INTO report_submission_log
+(report_id, action, remarks, action_by)
+VALUES
+(1001, 'submitted', 'All values verified and finalized.', 101);
+
+
+SELECT 
+    r.id AS row_id,
+    r.name AS row_name,
+    r.parent_id,
+    c.id AS column_id,
+    c.name AS column_name,
+    COALESCE(v.value, 0) AS value,
+    v.remarks
+FROM report_master rm
+JOIN report_rows r 
+    ON r.report_id = rm.id
+JOIN report_columns c 
+    ON c.report_id = rm.id
+LEFT JOIN report_cell_values v 
+    ON v.row_id = r.id 
+    AND v.column_id = c.id
+    AND v.report_id = rm.id
+WHERE rm.id = 1
+ORDER BY r.display_order, c.display_order;
