@@ -1,29 +1,53 @@
-import { useState, useEffect } from "react";
-import MonthlyReport from "./MonthlyReport";
-import "./App.css";
+import Page from "./Page";
 
 function App() {
-  const [month, setMonth] = useState();
+  const config = {
+    workflowId: "WF-123",
 
-  useEffect(() => {
-    const today = new Date();
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const yyyy = today.getFullYear();
+    states: ["Tamil Nadu", "Kerala"],
 
-    setMonth(`${yyyy}-${mm}`);
-  }, []);
+    report: {
+      editable: true,
 
-  return (
-    <>
-      <div>{month}</div>
-      <input
-        value={month}
-        type="month"
-        onChange={(e) => setMonth(e.target.value)}
-      />
-      <MonthlyReport month={month} />
-    </>
-  );
+      columns: [
+        { key: "value", label: "Value" },
+        { key: "remarks", label: "Remarks" },
+      ],
+
+      sections: [
+        {
+          id: "s1",
+          title:
+            "Enrollment Kits/Operators Currently Operational & Inspection Details",
+          rows: [
+            { id: "r1", label: "Total Enrollment kits Operational" },
+            { id: "r2", label: "Total CELC kits Currently Operational" },
+          ],
+        },
+        {
+          id: "s2",
+          title: "Total Enrollment/Update",
+          rows: [
+            { id: "r3", label: "Total enrollment" },
+            { id: "r4", label: "Total update" },
+          ],
+        },
+      ],
+    },
+
+    workflow: {
+      actions: ["approve", "reject"],
+      fieldsByAction: {
+        approve: [{ name: "comments", label: "Comments", type: "text" }],
+        reject: [
+          { name: "comments", label: "Comments", type: "text" },
+          { name: "reason", label: "Reason", type: "text" },
+        ],
+      },
+    },
+  };
+
+  return <Page config={config} />;
 }
 
 export default App;
