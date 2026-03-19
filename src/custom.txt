@@ -1,0 +1,48 @@
+import { useFormContext, Controller } from "react-hook-form";
+import Dropdown from "../components/Dropdown"; // your custom dropdown
+
+export default function ActionOne({ nodeIndex }) {
+  const { register, control } = useFormContext();
+
+  return (
+    <div>
+      {/* Normal input — use register as usual */}
+      <label>
+        text5
+        <input {...register(`workflow.node_${nodeIndex}.text5`)} type="text" />
+      </label>
+
+      {/* Custom Dropdown — use Controller */}
+      <Controller
+        name={`workflow.node_${nodeIndex}.category`}
+        control={control}
+        defaultValue=""
+        render={({ field }) => (
+          <Dropdown
+            value={field.value}           // ✅ RHF controls the value
+            onChange={field.onChange}     // ✅ RHF captures changes
+            onBlur={field.onBlur}         // ✅ RHF tracks touched state
+            options={[
+              { label: "Option A", value: "a" },
+              { label: "Option B", value: "b" },
+            ]}
+          />
+        )}
+      />
+    </div>
+  );
+}
+
+<Controller
+  name={`workflow.node_${nodeIndex}.category`}
+  control={control}
+  rules={{ required: "Please select a category" }}
+  render={({ field, fieldState }) => (
+    <>
+      <Dropdown value={field.value} onChange={field.onChange} />
+      {fieldState.error && (
+        <span style={{ color: "red" }}>{fieldState.error.message}</span>
+      )}
+    </>
+  )}
+/>

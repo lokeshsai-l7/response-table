@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import ReportTable from "./ReportTable";
-import WorkflowActions from "./WorkflowActions";
+import { WorkflowProvider } from "./WorkflowContext";
+import Roso from "./Roles/ROSO/Roso";
+import Hqso from "./Roles/HQSO/Hqso";
 
 const tabStyles = {
   wrapper: {
@@ -24,6 +26,21 @@ const tabStyles = {
   }),
 };
 
+const workflowConfig = [
+  { nodeIndex: 1, role: "HQSO", partOfWorkflow: 1 },
+  {
+    nodeIndex: 2,
+    role: "ROSO",
+    partOfWorkflow: 1,
+  },
+  { nodeIndex: 3, role: "HQSO", partOfWorkflow: 2 },
+  {
+    nodeIndex: 4,
+    role: "ROSO",
+    partOfWorkflow: 2,
+  },
+];
+
 const Page = ({ config }) => {
   const [activeState, setActiveState] = useState(config.states[0]);
 
@@ -38,7 +55,7 @@ const Page = ({ config }) => {
         });
       });
     });
-    defaultValuesRef.current = { report, workflow: {} };
+    defaultValuesRef.current = { report };
   }
 
   const methods = useForm({
@@ -47,11 +64,10 @@ const Page = ({ config }) => {
   });
 
   const onSubmit = (values) => {
+    console.log(values);
     console.log("FINAL PAYLOAD", {
       workflowId: config.workflowId,
-      action: values.workflow.action,
       reportDetails: values.report,
-      workflowData: values.workflow,
     });
   };
 
@@ -79,8 +95,18 @@ const Page = ({ config }) => {
           activeState={activeState}
           states={config.states}
         />
-
-        <WorkflowActions config={config.workflow} />
+        <div>
+          <h1>Workflow details</h1>
+          <WorkflowProvider>
+            {workflowConfig.map((eachConfig) => {
+              return eachConfig.role === "HQSO" ? (
+                <Hqso details={eachConfig} key={eachConfig.nodeIndex} />
+              ) : eachConfig.role === "ROSO" ? (
+                <Roso details={eachConfig} key={eachConfig.nodeIndex} />
+              ) : null;
+            })}
+          </WorkflowProvider>
+        </div>
         <button
           type="submit"
           style={{

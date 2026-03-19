@@ -34,17 +34,6 @@ function App() {
         },
       ],
     },
-
-    workflow: {
-      actions: ["approve", "reject"],
-      fieldsByAction: {
-        approve: [{ name: "comments", label: "Comments", type: "text" }],
-        reject: [
-          { name: "comments", label: "Comments", type: "text" },
-          { name: "reason", label: "Reason", type: "text" },
-        ],
-      },
-    },
   };
 
   return <Page config={config} />;
