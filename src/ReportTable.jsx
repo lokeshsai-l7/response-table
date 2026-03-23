@@ -73,17 +73,102 @@ const styles = {
   },
 };
 
-const Cell = ({ name, editable }) => {
-  const { register, getValues } = useFormContext();
-  if (!editable) return <span style={{ fontSize: 13 }}>{getValues(name)}</span>;
+function getFieldError(errors, name) {
+  return name.split(".").reduce((acc, key) => acc?.[key], errors)?.message;
+}
+
+const Cell = ({ name, editable, colKey, dirtyCountFields }) => {
+  const {
+    register,
+    getValues,
+    trigger,
+    formState: { errors },
+  } = useFormContext();
+
+  const basePath = name.substring(0, name.lastIndexOf("."));
+  const countName = `${basePath}.count`;
+  const remarksName = `${basePath}.remarks`;
+
+  if (!editable) {
+    return <span style={{ fontSize: 13 }}>{getValues(name)}</span>;
+  }
+
+  if (colKey === "count") {
+    const { onChange: rhfOnChange, ...rest } = register(name, {
+      setValueAs: (v) => (v === "" ? "" : Number(v)), // ✅ store as number in RHF
+    });
+
+    // ✅ Read current form value so remounted inputs restore their value
+    const currentValue = getValues(name);
+
+    return (
+      <input
+        {...rest}
+        defaultValue={currentValue} // ✅ restores value after react-window remount
+        onChange={(e) => {
+          rhfOnChange(e);
+          dirtyCountFields.current.add(countName);
+        }}
+        type="number" // ✅ browser blocks non-numeric input
+        min={0}
+        placeholder="Enter value"
+        style={{
+          ...styles.input,
+          // removes the ugly spinner arrows
+          MozAppearance: "textfield",
+          WebkitAppearance: "none",
+        }}
+        onFocus={(e) => (e.target.style.borderColor = "#5c5ccc")}
+        onBlur={(e) => {
+          e.target.style.borderColor = "#d0d0d0";
+          if (dirtyCountFields.current.has(countName)) {
+            trigger(remarksName);
+          }
+        }}
+      />
+    );
+  }
+
+  // Remarks field
+  const error = getFieldError(errors, name);
+  const currentValue = getValues(name);
   return (
-    <input
-      {...register(name)}
-      placeholder="Enter value"
-      style={styles.input}
-      onFocus={(e) => (e.target.style.borderColor = "#5c5ccc")}
-      onBlur={(e) => (e.target.style.borderColor = "#d0d0d0")}
-    />
+    <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+      <input
+        {...register(name, {
+          validate: (value) => {
+            // ✅ Only validate if user actually touched/changed this count field
+            // This prevents pre-filled edit-mode counts from triggering errors
+            // and prevents other tabs' fields from erroring on unrelated triggers
+            if (!dirtyCountFields.current.has(countName)) {
+              return true;
+            }
+            const count = getValues(countName);
+            const countFilled =
+              count !== "" && count !== null && count !== undefined;
+            if (countFilled && !value?.trim()) {
+              return "Remarks required";
+            }
+            return true;
+          },
+        })}
+        defaultValue={currentValue}
+        placeholder="Enter remarks"
+        style={{
+          ...styles.input,
+          borderColor: error ? "#e53935" : "#d0d0d0",
+        }}
+        onFocus={(e) => (e.target.style.borderColor = "#5c5ccc")}
+        onBlur={(e) => {
+          e.target.style.borderColor = error ? "#e53935" : "#d0d0d0";
+        }}
+      />
+      {error && (
+        <span style={{ color: "#e53935", fontSize: 11, marginTop: 2 }}>
+          {error}
+        </span>
+      )}
+    </div>
   );
 };
 
@@ -104,6 +189,7 @@ const RowComponent = ({
   columns,
   editable,
   activeState,
+  dirtyCountFields,
 }) => {
   const item = items[index];
   if (!item) return null;
@@ -124,6 +210,8 @@ const RowComponent = ({
           <Cell
             name={`report.${activeState}.${item.id}.${col.key}`}
             editable={editable}
+            colKey={col.key}
+            dirtyCountFields={dirtyCountFields}
           />
         </div>
       ))}
@@ -131,24 +219,42 @@ const RowComponent = ({
   );
 };
 
-const StateTable = ({ state, isActive, sections, columns, editable }) => {
+const StateTable = ({
+  state,
+  isActive,
+  sections,
+  columns,
+  editable,
+  dirtyCountFields,
+}) => {
   const items = useFlattenedData(sections);
   return (
     <div style={{ display: isActive ? "block" : "none" }}>
-      <List
-        rowComponent={RowComponent}
-        rowCount={items.length}
-        rowHeight={48}
-        rowProps={{ items, columns, editable, activeState: state }}
-        style={{ height: 400, width: "100%" }}
-      />
+      {/* ✅ No virtualization — all rows stay mounted, RHF never loses registrations */}
+      {items.map((item, index) => (
+        <RowComponent
+          key={index}
+          index={index}
+          style={{}}
+          items={items}
+          columns={columns}
+          editable={editable}
+          activeState={state}
+          dirtyCountFields={dirtyCountFields}
+        />
+      ))}
     </div>
   );
 };
-
-const ReportTable = ({ sections, columns, editable, activeState, states }) => (
+const ReportTable = ({
+  sections,
+  columns,
+  editable,
+  activeState,
+  states,
+  dirtyCountFields,
+}) => (
   <div style={styles.wrapper}>
-    {/* Column headers */}
     <div style={styles.header}>
       <div style={styles.headerTitle}>Title &amp; Parameters</div>
       {columns.map((col) => (
@@ -157,8 +263,6 @@ const ReportTable = ({ sections, columns, editable, activeState, states }) => (
         </div>
       ))}
     </div>
-
-    {/* All states mounted, only active visible */}
     {states.map((state) => (
       <StateTable
         key={state}
@@ -167,6 +271,7 @@ const ReportTable = ({ sections, columns, editable, activeState, states }) => (
         sections={sections}
         columns={columns}
         editable={editable}
+        dirtyCountFields={dirtyCountFields}
       />
     ))}
   </div>
