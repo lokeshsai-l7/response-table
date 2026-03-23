@@ -1,0 +1,375 @@
+import { useQuery } from "react-query";
+import { workflow } from "../../../services/workflow";
+import { queryClientConfig } from "../../../config/queryClientConfig";
+import { toast } from "react-toastify";
+import { useForm, FormProvider } from "react-hook-form";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { dateTimeFormat } from "../../../utils/formatString";
+import { DaysDifference } from "../../../utils/dateUtils";
+import Column from "../../../components/Column";
+import { stepStatus } from "../../../constants/enum/stepStatus";
+import WorkflowPanel from "../../../components/Workflow/WorkflowPanel";
+import ActionHistory from "../../../components/Workflow/ActionHistory";
+import { misReportNodeConfig } from "../../../config/misReportNodeConfig";
+import HQSO from "./HQSO";
+import { userRole } from "../../../constants/enum/userRole";
+import { WorkflowProvider } from "../../../contexts/workflowContext";
+import ReportDetails from "../ReportDetails";
+import DetailsAccordion from "../../../components/DetailsAccordion";
+import ROSO from "./ROSO";
+import { workflowState } from "../../../navigation/atoms/workflow";
+import { useRecoilValue, useSetRecoilState } from "recoil";
+import {
+  denormalizeReport,
+  normalizeCreateData,
+  normalizeEditData,
+} from "../ReportDetails/utils/normalizeReport";
+import { MainNavBar } from "host/reusableComponents";
+import ReportTable from "../ReportDetails/ReportTable";
+import styles from "./index.module.scss";
+import sharedStyles from "host/styles";
+import RODIR from "./RODIR";
+import RODDG from "./RODDG";
+import RODD from "./RODD";
+import { useSelector } from "react-redux";
+import { mapDocuments } from "../../../utils/mapDocuments";
+import { pageAtom } from "../../../navigation/atoms/atom";
+import { PAGES } from "../../../constants/navigation";
+import { misReportService } from "../../../services/misReportService";
+
+const WorkflowDetails = ({
+  workflowId,
+  nodeHistory,
+  misReportDetails,
+  view,
+}) => {
+  const setActivePage = useSetRecoilState(pageAtom);
+  const userDetails = useSelector((state) => state.userPerm.userPermissionData);
+  const [expandWorkflowDetails, setExpandWorkflowDetails] = useState(true);
+  const [expandReportDetails, setExpandReportDetails] = useState(true);
+
+  const ref = useRef(null);
+
+  const { genericDetails, reportDetails, totalAmount } = misReportDetails;
+  const { workflowStatus, updatedOn, roName } = genericDetails;
+
+  const defaultValuesRef = useRef();
+
+  const renderReportDetails = () => {
+    if (view === "statesView") {
+      const { states } = useRecoilValue(workflowState);
+      const [activeState, setActiveState] = useState(states[0]);
+      const [leftTitles, setLeftTitles] = useState([]);
+      const isReportEmpty = useMemo(() => {
+        return !Object.values(reportDetails).some((cityData) =>
+          Object.values(cityData).some(
+            (stateArray) => Array.isArray(stateArray) && stateArray.length > 0,
+          ),
+        );
+      }, [reportDetails]);
+
+      const mode = isReportEmpty ? "create" : "edit";
+
+      const editable = mode === "create" || mode === "edit";
+
+      useEffect(() => {
+        if (isReportEmpty && genericDetails?.reportName) {
+          const fetchLeftTitles = async () => {
+            let payload = {
+              reportName: genericDetails?.reportName,
+              reportedTo: genericDetails?.reportedTo,
+              month: genericDetails?.reportMonth,
+              roKey: genericDetails?.roKey,
+              state: genericDetails?.roName,
+            };
+            const response =
+              await misReportService.fetchReportConfigByReportNameAndReportTypeAndMonth(
+                payload,
+              );
+
+            if (response.successResponse?.status) {
+              setLeftTitles(response?.successResponse?.data.leftTitles);
+            } else {
+              toast.error(response.successResponse.message);
+            }
+          };
+          fetchLeftTitles();
+        }
+      }, [isReportEmpty, genericDetails]);
+
+      if (!defaultValuesRef.current) {
+        let report;
+        if (mode === "create") {
+          report = normalizeCreateData(states, leftTitles);
+        } else {
+          report = normalizeEditData(reportDetails[roName]);
+        }
+        defaultValuesRef.current = { report };
+      }
+
+      const sections = useMemo(() => {
+        if (mode === "create") {
+          return (leftTitles || []).map((section) => ({
+            id: String(section.id),
+            title: section.titleName,
+            rows: (section.headers || []).map((h) => ({ id: h, label: h })),
+          }));
+        }
+
+        const entries = Object.entries(reportDetails || {});
+        const firstStateData = entries[0]?.[1];
+
+        if (Array.isArray(firstStateData)) {
+          return firstStateData.map((row) => ({
+            id: row.rowParameterName,
+            label: row.rowParameterName,
+          }));
+        }
+
+        return [];
+      }, [mode, leftTitles, reportDetails]);
+
+      if (mode === "create" && leftTitles.length === 0) {
+        return <div>Loading config...</div>;
+      }
+
+      const normalizedSections =
+        mode === "create"
+          ? sections
+          : [{ id: "s1", title: "Report Details", rows: sections }];
+
+      const columns = [
+        { key: "count", label: "Value" },
+        { key: "remarks", label: "Remarks" },
+      ];
+      const listToMap = (list) => {
+        return Object.fromEntries(list.map((item) => [item, item]));
+      };
+      return (
+        <div className={styles.editabaleTableContainer}>
+          <MainNavBar
+            tabList={listToMap(states)}
+            activeTab={activeState}
+            setActiveTab={setActiveState}
+            className={styles.editabaleTableContainer_navbar}
+          />
+
+          <ReportTable
+            sections={normalizedSections}
+            columns={columns}
+            editable={editable}
+            activeState={activeState}
+            states={states}
+          />
+        </div>
+      );
+    } else {
+      return <ReportDetails reportDetails={reportDetails} />;
+    }
+  };
+
+  const methods = useForm({
+    defaultValues: defaultValuesRef.current,
+    shouldUnregister: false,
+  });
+
+  const onSubmit = async (values) => {
+    var documentsList = [];
+    documentsList.push(
+      ...mapDocuments(
+        userDetails,
+        values?.takeAction?.uploadedFiles,
+        "SUPPORTING_DOCUMENTS",
+      ),
+    );
+    const payload = {
+      reportedTo: genericDetails?.reportedTo,
+      reportName: genericDetails?.reportName,
+      reportMonth: genericDetails?.reportMonth,
+      workflowModel: {
+        requesterRole: userDetails?.userRoleName,
+        requesterUserId: userDetails?.userId,
+        requesterUserName: userDetails?.name,
+        workflowId: workflowId,
+        currentNodeIndex: values?.currentNodeDetails?.nodeIndex,
+        nextNodeIndex:
+          values?.takeAction?.selectedNodeDetails?.value?.nodeIndex,
+        workflowAction: values?.takeAction?.status,
+        comments: values?.takeAction?.comments,
+        reportCountDetails: denormalizeReport(values.report),
+      },
+      documentsList,
+    };
+
+    console.log("payload", payload);
+
+    const response = await misReportService.processMisReport(payload);
+    if (response.successResponse?.status) {
+      toast.success(response.successResponse.message);
+    } else {
+      toast.error(response.successResponse.message);
+    }
+  };
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (expandWorkflowDetails) {
+      el.style.display = "block";
+      const height = el.scrollHeight;
+      el.style.height = "0px";
+      requestAnimationFrame(() => {
+        el.style.height = height + "px";
+      });
+      const end = () => {
+        el.style.height = "auto";
+        el.removeEventListener("transitionend", end);
+      };
+      el.addEventListener("transitionend", end);
+    } else {
+      const height = el.scrollHeight;
+      el.style.height = height + "px";
+      requestAnimationFrame(() => {
+        el.style.height = "0px";
+      });
+    }
+
+    if (expandReportDetails) {
+      el.style.display = "block";
+      const height = el.scrollHeight;
+      el.style.height = "0px";
+      requestAnimationFrame(() => {
+        el.style.height = height + "px";
+      });
+      const end = () => {
+        el.style.height = "auto";
+        el.removeEventListener("transitionend", end);
+      };
+      el.addEventListener("transitionend", end);
+    } else {
+      const height = el.scrollHeight;
+      el.style.height = height + "px";
+      requestAnimationFrame(() => {
+        el.style.height = "0px";
+      });
+    }
+  }, [expandWorkflowDetails, expandReportDetails]);
+
+  return (
+    <FormProvider {...methods}>
+      <form onSubmit={methods.handleSubmit(onSubmit)}>
+        <div>
+          <DetailsAccordion
+            header={"Report details"}
+            expanded={expandReportDetails}
+            setExpanded={setExpandReportDetails}
+          >
+            {renderReportDetails()}
+          </DetailsAccordion>
+
+          <DetailsAccordion
+            header={"Workflow details"}
+            expanded={expandWorkflowDetails}
+            setExpanded={setExpandWorkflowDetails}
+          >
+            <div className={styles.workflow_history}>
+              <div className={styles.workflow_history_header}>
+                <Column
+                  headerVisible={true}
+                  label={"Workflow Id"}
+                  children={workflowId}
+                />
+                <Column
+                  headerVisible={true}
+                  label={"Created on"}
+                  children={dateTimeFormat(
+                    nodeHistory[0]?.actionHistoryList[0]?.startDate,
+                    2,
+                  )}
+                />
+                <Column
+                  headerVisible={true}
+                  label={"Completed on"}
+                  children={
+                    workflowStatus === "COMPLETED"
+                      ? dateTimeFormat(updatedOn, 2)
+                      : "-"
+                  }
+                />
+                <Column
+                  headerVisible={true}
+                  label={"Elapsed Time"}
+                  children={
+                    DaysDifference(
+                      nodeHistory[0]?.actionHistoryList[0]?.startDate,
+                    ) + "days"
+                  }
+                />
+                <Column
+                  headerVisible={true}
+                  label={"Status"}
+                  children={workflowStatus}
+                  type={"status"}
+                />
+              </div>
+              <div className={styles.workflow_history_component}>
+                {[...nodeHistory].reverse().map((node, key) => {
+                  const workflowData = {
+                    nodeConfig: misReportNodeConfig[node.nodeIndex],
+                    currStepStatus: node.actionHistoryList[0].stepStatus,
+                    workflowId: workflowId,
+                  };
+
+                  return (
+                    <WorkflowProvider value={workflowData} key={node.nodeIndex}>
+                      <WorkflowPanel nodeHistory={node} index={key}>
+                        <ActionHistory
+                          actionHistoryList={node.actionHistoryList}
+                        />
+                        <div className={styles.workflowContainer}>
+                          {typeof workflowData.nodeConfig == "undefined" ||
+                          workflowData.nodeConfig == null ? (
+                            <div>node config null</div>
+                          ) : workflowData.nodeConfig.role == userRole.HQ_SO ? (
+                            <HQSO nodeDetails={node} />
+                          ) : workflowData.nodeConfig.role == userRole.RO_SO ? (
+                            <ROSO nodeDetails={node} />
+                          ) : workflowData.nodeConfig.role == userRole.RO_DD ? (
+                            <RODD />
+                          ) : workflowData.nodeConfig.role ==
+                            userRole.RO_DIR ? (
+                            <RODIR />
+                          ) : workflowData.nodeConfig.role ==
+                            userRole.RO_DDG ? (
+                            <RODDG />
+                          ) : (
+                            <></>
+                          )}
+                        </div>
+                      </WorkflowPanel>
+                    </WorkflowProvider>
+                  );
+                })}
+              </div>
+            </div>
+          </DetailsAccordion>
+
+          <div className={styles.formButtons}>
+            <button
+              onClick={() => setActivePage(PAGES.DASHBOARD)}
+              className={sharedStyles.btn_tertiary}
+              type="button"
+            >
+              Cancel
+            </button>
+            <button className={sharedStyles.btn_primary} type="submit">
+              Submit
+            </button>
+          </div>
+        </div>
+      </form>
+    </FormProvider>
+  );
+};
+
+export default WorkflowDetails;
