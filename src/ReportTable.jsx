@@ -119,6 +119,11 @@ const Cell = ({ name, editable, colKey, dirtyCountFields }) => {
           WebkitAppearance: "none",
         }}
         onFocus={(e) => (e.target.style.borderColor = "#5c5ccc")}
+        onKeyDown={(e) => {
+          if (["e", "E", "+", "-", "."].includes(e.key)) {
+            e.preventDefault();
+          }
+        }}
         onBlur={(e) => {
           e.target.style.borderColor = "#d0d0d0";
           if (dirtyCountFields.current.has(countName)) {

@@ -27,9 +27,30 @@ const Page = ({ mode, workflowId, states, reportDetails, leftTitles }) => {
   }, [leftTitles]);
 
   const onSubmit = (values) => {
+    const fullReport = denormalizeReport(values.report);
+
+    // Filter each state's rows — only include rows where user added/changed count
+    const filteredReport = {};
+    Object.entries(fullReport).forEach(([state, rows]) => {
+      const changedRows = rows.filter((row) => {
+        const countFieldName = `report.${state}.${row.rowParameterName}.count`;
+        // Include row if: field is in dirty set (user typed) OR count was pre-filled from API
+        const userTyped = dirtyCountFields.current.has(countFieldName);
+        const preFilledFromApi =
+          mode === "edit" &&
+          row.count !== "" &&
+          row.count !== null &&
+          row.count !== undefined;
+        return userTyped || preFilledFromApi;
+      });
+      if (changedRows.length > 0) {
+        filteredReport[state] = changedRows;
+      }
+    });
+
     const payload = {
       workflowId,
-      reportDetails: denormalizeReport(values.report),
+      reportDetails: filteredReport,
     };
     console.log("FINAL PAYLOAD", payload);
   };
@@ -47,18 +68,26 @@ const Page = ({ mode, workflowId, states, reportDetails, leftTitles }) => {
     { key: "remarks", label: "Remarks" },
   ];
 
-  const tabStyle = (active) => ({
-    padding: "10px 24px",
-    border: "none",
-    background: "none",
-    cursor: "pointer",
-    fontSize: 14,
-    fontWeight: active ? 600 : 400,
-    color: active ? "#3f3fcc" : "#555",
-    borderBottom: active ? "2px solid #3f3fcc" : "2px solid transparent",
-    marginBottom: -2,
-    transition: "all 0.15s",
-  });
+  const tabStyles = {
+    wrapper: {
+      borderBottom: "2px solid #e0e0e0",
+      marginBottom: 24,
+      display: "flex",
+      gap: 0,
+    },
+    tab: (active) => ({
+      padding: "10px 24px",
+      border: "none",
+      background: "none",
+      cursor: "pointer",
+      fontSize: 14,
+      fontWeight: active ? 600 : 400,
+      color: active ? "#3f3fcc" : "#555",
+      borderBottom: active ? "2px solid #3f3fcc" : "2px solid transparent",
+      marginBottom: -2,
+      transition: "all 0.15s",
+    }),
+  };
 
   if (leftTitles.length === 0) {
     return <div>Loading config...</div>;
@@ -96,15 +125,6 @@ const Page = ({ mode, workflowId, states, reportDetails, leftTitles }) => {
         />
         <div>
           <h1>Workflow details</h1>
-          <WorkflowProvider>
-            {workflowConfig.map((eachConfig) => {
-              return eachConfig.role === "HQSO" ? (
-                <Hqso details={eachConfig} key={eachConfig.nodeIndex} />
-              ) : eachConfig.role === "ROSO" ? (
-                <Roso details={eachConfig} key={eachConfig.nodeIndex} />
-              ) : null;
-            })}
-          </WorkflowProvider>
         </div>
         <button
           type="submit"
