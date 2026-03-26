@@ -1,61 +1,85 @@
 import { useMemo } from "react";
 import ErrorBoundary from "./ErrorBoundary";
 import Page from "./Page";
+import { downloadROExcel } from "./utils/downloadExcel";
 
 function App() {
-  // Simulating what you'd get from your process API
   const roname = "bengaluru";
-  const processApiResponse = {
-    workflowId: "WF-123",
-    states: ["Kerala", "Karnataka"],
-    reportDetails: {
-      bengaluru: {
-        // Kerala: [
-        //   { rowParameter: "header1", count: 321, remarks: "" },
-        //   { rowParameter: "header2", count: 141, remarks: "" },
-        // ],
-        // Karnataka: [
-        //   { rowParameter: "header1", count: 121, remarks: "" },
-        //   { rowParameter: "header2", count: 121, remarks: "" },
-        // ],
-      },
-    }, // empty on first load (CREATE mode)
+  const roData = {
+    bengaluru: {
+      Kerala: [
+        { rowParameter: "header1", count: 321, remarks: "" },
+        { rowParameter: "header2", count: 141, remarks: "" },
+        { rowParameter: "header3", count: 323, remarks: "" },
+        { rowParameter: "header4", count: 191, remarks: "" },
+      ],
+      Karnataka: [
+        { rowParameter: "header1", count: 121, remarks: "" },
+        { rowParameter: "header2", count: 121, remarks: "" },
+        { rowParameter: "header3", count: 381, remarks: "" },
+        { rowParameter: "header4", count: 641, remarks: "" },
+      ],
+    },
+    chennai: {
+      Tamilnadu: [
+        { rowParameter: "header1", count: 321, remarks: "" },
+        { rowParameter: "header2", count: 141, remarks: "" },
+        { rowParameter: "header3", count: 323, remarks: "" },
+        { rowParameter: "header4", count: 191, remarks: "" },
+      ],
+      coimbattor: [
+        { rowParameter: "header1", count: 121, remarks: "" },
+        { rowParameter: "header2", count: 121, remarks: "" },
+        { rowParameter: "header3", count: 381, remarks: "" },
+        { rowParameter: "header4", count: 641, remarks: "" },
+      ],
+    },
+  };
+  const totalCount = {
+    bengaluru: { header1: 141, header2: 521, header3: 323, header4: 313 },
+    chennai: { header1: 141, header2: 521, header3: 323, header4: 313 },
   };
 
-  // Simulating your headers API response
-  const headersApiResponse = {
-    leftTitles: [
-      {
-        id: 1,
-        title: "Enrollment Kits",
-        headers: ["header1", "header2"],
-      },
-      {
-        id: 2,
-        title: "Total Enrollment/Update",
-        headers: ["header3", "header4"],
-      },
-    ],
-  };
+  const leftTitles = [
+    {
+      id: 1,
+      title: "Enrollment Kits",
+      headers: ["header1", "header2"],
+    },
+    {
+      id: 2,
+      title: "Total Enrollment/Update",
+      headers: ["header3", "header4"],
+    },
+  ];
 
-  const hasExistingData =
-    Object.keys(processApiResponse.reportDetails[roname] ?? {}).length > 0;
-
-  console.log("hasExistingData", hasExistingData);
-
-  const mode = hasExistingData ? "edit" : "create";
-  // pass "view" explicitly when you want read-only
+  const reportMonth = "March 2026";
+  const reportName = "Testing";
 
   return (
     <ErrorBoundary>
-      <Page
+      {/* <Page
         mode={mode}
         workflowId={processApiResponse.workflowId}
         states={processApiResponse.states}
         reportDetails={processApiResponse.reportDetails}
         // Only pass leftTitles in create mode — no need to call headers API otherwise
         leftTitles={headersApiResponse.leftTitles}
-      />
+      /> */}
+      <button
+        onClick={() =>
+          downloadROExcel(
+            leftTitles,
+            roData,
+            totalCount,
+            reportMonth,
+            reportName,
+            "MyReport.xlsx",
+          )
+        }
+      >
+        Download Excel
+      </button>
     </ErrorBoundary>
   );
 }
