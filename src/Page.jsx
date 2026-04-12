@@ -5,14 +5,16 @@ import {
   normalizeCreateData,
   normalizeEditData,
   denormalizeReport,
+  sanitizeKey,
 } from "./utils/normalizeReport";
 
 const Page = ({ mode, workflowId, states, reportDetails, leftTitles }) => {
-  const [activeState, setActiveState] = useState(states[0]);
+  const [activeState, setActiveState] = useState(sanitizeKey(states[0]));
   const editable = mode === "create" || mode === "edit";
 
   // ✅ Must be above any early returns — hooks can't be called conditionally
   const dirtyCountFields = useRef(new Set());
+  const dirtyRemarksFields = useRef(new Set());
   const methods = useForm({ shouldUnregister: false });
 
   useEffect(() => {
@@ -37,8 +39,11 @@ const Page = ({ mode, workflowId, states, reportDetails, leftTitles }) => {
   const sections = useMemo(() => {
     return (leftTitles || []).map((section) => ({
       id: String(section.id),
-      title: section.title, // ✅ was section.titleName — your data uses "title"
-      rows: (section.headers || []).map((h) => ({ id: h, label: h })),
+      title: section.title,
+      rows: (section.headers || []).map((h) => ({
+        id: sanitizeKey(h), // ✅ safe key used in RHF field name
+        label: h, // ✅ original shown in UI
+      })),
     }));
   }, [leftTitles]);
 
@@ -78,10 +83,10 @@ const Page = ({ mode, workflowId, states, reportDetails, leftTitles }) => {
             <button
               key={state}
               type="button"
-              onClick={() => setActiveState(state)}
-              style={tabStyles.tab(activeState === state)}
+              onClick={() => setActiveState(sanitizeKey(state))} // ✅ store sanitized key
+              style={tabStyle(activeState === sanitizeKey(state))}
             >
-              {state}
+              {state} {/* ✅ display original */}
             </button>
           ))}
         </div>
@@ -90,22 +95,12 @@ const Page = ({ mode, workflowId, states, reportDetails, leftTitles }) => {
           sections={sections}
           columns={columns}
           editable={editable}
-          activeState={activeState}
-          states={states}
+          activeState={activeState} // already a sanitized key
+          states={states.map(sanitizeKey)}
           dirtyCountFields={dirtyCountFields}
+          dirtyRemarksFields={dirtyRemarksFields}
         />
-        <div>
-          <h1>Workflow details</h1>
-          <WorkflowProvider>
-            {workflowConfig.map((eachConfig) => {
-              return eachConfig.role === "HQSO" ? (
-                <Hqso details={eachConfig} key={eachConfig.nodeIndex} />
-              ) : eachConfig.role === "ROSO" ? (
-                <Roso details={eachConfig} key={eachConfig.nodeIndex} />
-              ) : null;
-            })}
-          </WorkflowProvider>
-        </div>
+
         <button
           type="submit"
           style={{

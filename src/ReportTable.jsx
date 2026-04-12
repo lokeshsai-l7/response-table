@@ -1,10 +1,9 @@
-import React, { useMemo } from "react";
-import { List } from "react-window";
+import React, { useMemo, useRef } from "react";
+
 import { useFormContext } from "react-hook-form";
 
 const styles = {
   wrapper: {
-    fontFamily: "'Segoe UI', sans-serif",
     border: "1px solid #e0e0e0",
     borderRadius: 8,
     overflow: "hidden",
@@ -13,19 +12,19 @@ const styles = {
   header: {
     display: "flex",
     alignItems: "center",
-    background: "#fff",
+    background: "#F9F9FA",
     borderBottom: "2px solid #e0e0e0",
     padding: "10px 16px",
   },
   headerCell: {
     fontWeight: 700,
-    fontSize: 13,
+    fontSize: 14,
     color: "#222",
     flex: 1,
   },
   headerTitle: {
     fontWeight: 700,
-    fontSize: 13,
+    fontSize: 14,
     color: "#222",
     width: 280,
     flexShrink: 0,
@@ -33,28 +32,30 @@ const styles = {
   sectionRow: {
     display: "flex",
     alignItems: "center",
-    background: "#eeeef7",
+    background: "#E9E9FF",
     padding: "8px 16px",
     borderBottom: "1px solid #d8d8ee",
   },
   sectionLabel: {
-    fontSize: 13,
+    fontSize: 14,
     color: "#333",
-    fontWeight: 500,
+    fontWeight: 600,
   },
   dataRow: {
     display: "flex",
     alignItems: "center",
-    padding: "0 16px",
-    borderBottom: "1px solid #f0f0f0",
+    padding: "12px 16px 0 16px",
+    //borderBottom: "1px solid #f0f0f0",
     background: "#fff",
   },
   rowLabel: {
     width: 280,
     flexShrink: 0,
-    fontSize: 13,
-    color: "#333",
+    fontSize: 14,
+    fontWeight: 500,
+    color: "#4C4B5A",
     paddingRight: 16,
+    paddingBottom: 10,
   },
   cellWrapper: {
     flex: 1,
@@ -62,6 +63,7 @@ const styles = {
   },
   input: {
     width: "100%",
+    height: "30px",
     border: "1px solid #d0d0d0",
     borderRadius: 4,
     padding: "5px 10px",
@@ -73,11 +75,13 @@ const styles = {
   },
 };
 
-function getFieldError(errors, name) {
-  return name.split(".").reduce((acc, key) => acc?.[key], errors)?.message;
-}
-
-const Cell = ({ name, editable, colKey, dirtyCountFields }) => {
+const Cell = ({
+  name,
+  editable,
+  colKey,
+  dirtyCountFields,
+  dirtyRemarksFields,
+}) => {
   const {
     register,
     getValues,
@@ -89,85 +93,172 @@ const Cell = ({ name, editable, colKey, dirtyCountFields }) => {
   const countName = `${basePath}.count`;
   const remarksName = `${basePath}.remarks`;
 
+  const initialCountRef = useRef(null);
+  const initialRemarksRef = useRef(null);
+  const initializedRef = useRef(false);
+
+  // ✅ Only initialize once, and only after RHF has values
+  if (!initializedRef.current) {
+    const rawCount = getValues(countName);
+    const rawRemarks = getValues(remarksName);
+    if (rawCount !== undefined || rawRemarks !== undefined) {
+      initialCountRef.current = rawCount ?? "";
+      initialRemarksRef.current =
+        rawRemarks == null ? "" : String(rawRemarks).trim();
+      initializedRef.current = true;
+    }
+  }
+
+  const normalize = (val) => {
+    if (val === null || val === undefined || val === "") return "";
+    if (typeof val === "number") return val;
+    return String(val).trim();
+  };
+
+  const isEmpty = (val) => {
+    const n = normalize(val);
+    return n === "" || n === null || n === undefined;
+  };
+
+  const isFilled = (val) => !isEmpty(val);
+
+  const validateRow = (count, remarks) => {
+    const initialCount = normalize(initialCountRef.current);
+    const initialRemarks = normalize(initialRemarksRef.current);
+
+    const normCount = normalize(count);
+    const normRemarks = normalize(remarks);
+
+    const isCountEmpty = isEmpty(normCount);
+    const isRemarksEmpty = isEmpty(normRemarks);
+
+    const initialCountFilled = isFilled(initialCount);
+    const initialRemarksFilled = isFilled(initialRemarks);
+
+    // ✅ Compare as strings to handle number vs string safely
+    const isCountModified = String(normCount) !== String(initialCount);
+    const isRemarksModified = String(normRemarks) !== String(initialRemarks);
+
+    // ─────────────────────────────────────────────
+    // SCENARIO 1: Both started empty
+    // ─────────────────────────────────────────────
+    if (!initialCountFilled && !initialRemarksFilled) {
+      if (isCountEmpty && !isRemarksEmpty) {
+        return { count: "Count is required when remarks is filled" };
+      }
+      return {};
+    }
+
+    // ─────────────────────────────────────────────
+    // SCENARIO 2: Count existed, remarks was empty
+    // ─────────────────────────────────────────────
+    if (initialCountFilled && !initialRemarksFilled) {
+      if (isCountModified && isRemarksEmpty) {
+        return { remarks: "Remarks is required when modifying existing count" };
+      }
+      return {};
+    }
+
+    // ─────────────────────────────────────────────
+    // SCENARIO 3: Both existed
+    // ─────────────────────────────────────────────
+    if (initialCountFilled && initialRemarksFilled) {
+      if (isCountModified && !isRemarksModified) {
+        return { remarks: "Remarks must also be updated when changing count" };
+      }
+      if (isRemarksModified && !isCountModified) {
+        return { count: "Count must also be updated when changing remarks" };
+      }
+      return {};
+    }
+
+    return {};
+  };
+
   if (!editable) {
     return <span style={{ fontSize: 13 }}>{getValues(name)}</span>;
   }
 
+  const getFieldError = (errors, name) =>
+    name.split(".").reduce((obj, key) => obj?.[key], errors)?.message;
+
+  const error = getFieldError(errors, name);
+
+  const containerStyle = {
+    display: "flex",
+    flexDirection: "column",
+    width: "100%",
+  };
+  const errorTextStyle = {
+    color: "#e53935",
+    fontSize: 11,
+    marginTop: 2,
+    minHeight: "14px",
+    visibility: error ? "visible" : "hidden",
+  };
+
   if (colKey === "count") {
-    const { onChange: rhfOnChange, ...rest } = register(name, {
-      setValueAs: (v) => (v === "" ? "" : Number(v)), // ✅ store as number in RHF
-    });
-
-    // ✅ Read current form value so remounted inputs restore their value
-    const currentValue = getValues(name);
-
     return (
-      <input
-        {...rest}
-        defaultValue={currentValue} // ✅ restores value after react-window remount
-        onChange={(e) => {
-          rhfOnChange(e);
-          dirtyCountFields.current.add(countName);
-        }}
-        type="number" // ✅ browser blocks non-numeric input
-        min={0}
-        placeholder="Enter value"
-        style={{
-          ...styles.input,
-          // removes the ugly spinner arrows
-          MozAppearance: "textfield",
-          WebkitAppearance: "none",
-        }}
-        onFocus={(e) => (e.target.style.borderColor = "#5c5ccc")}
-        onBlur={(e) => {
-          e.target.style.borderColor = "#d0d0d0";
-          if (dirtyCountFields.current.has(countName)) {
-            trigger(remarksName);
-          }
-        }}
-      />
+      <div style={containerStyle}>
+        <input
+          {...register(name, {
+            setValueAs: (v) => (v === "" ? "" : Number(v)),
+            validate: (value) => {
+              const remarks = getValues(remarksName);
+              const result = validateRow(value, remarks);
+              return result.count || true;
+            },
+            onChange: () => {
+              dirtyCountFields.current.add(countName);
+            },
+            onBlur: () => {
+              trigger([countName, remarksName]);
+            },
+          })}
+          type="number"
+          min={0}
+          placeholder="Enter value"
+          onKeyDown={(e) => {
+            if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+          }}
+          style={{
+            ...styles.input,
+            borderColor: error ? "#e53935" : "#d0d0d0",
+            MozAppearance: "textfield",
+            WebkitAppearance: "none",
+          }}
+          onFocus={(e) => (e.target.style.borderColor = "#5c5ccc")}
+        />
+        <span style={errorTextStyle}>{error || " "}</span>
+      </div>
     );
   }
 
-  // Remarks field
-  const error = getFieldError(errors, name);
-  const currentValue = getValues(name);
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+    <div style={containerStyle}>
       <input
         {...register(name, {
           validate: (value) => {
-            // ✅ Only validate if user actually touched/changed this count field
-            // This prevents pre-filled edit-mode counts from triggering errors
-            // and prevents other tabs' fields from erroring on unrelated triggers
-            if (!dirtyCountFields.current.has(countName)) {
-              return true;
-            }
             const count = getValues(countName);
-            const countFilled =
-              count !== "" && count !== null && count !== undefined;
-            if (countFilled && !value?.trim()) {
-              return "Remarks required";
-            }
-            return true;
+            const result = validateRow(count, value);
+            return result.remarks || true;
+          },
+          onChange: () => {
+            dirtyRemarksFields.current.add(remarksName);
+            trigger([name, countName]);
+          },
+          onBlur: () => {
+            trigger([countName, remarksName]);
           },
         })}
-        defaultValue={currentValue}
         placeholder="Enter remarks"
         style={{
           ...styles.input,
           borderColor: error ? "#e53935" : "#d0d0d0",
         }}
         onFocus={(e) => (e.target.style.borderColor = "#5c5ccc")}
-        onBlur={(e) => {
-          e.target.style.borderColor = error ? "#e53935" : "#d0d0d0";
-        }}
       />
-      {error && (
-        <span style={{ color: "#e53935", fontSize: 11, marginTop: 2 }}>
-          {error}
-        </span>
-      )}
+      <span style={errorTextStyle}>{error || " "}</span>
     </div>
   );
 };
@@ -190,6 +281,7 @@ const RowComponent = ({
   editable,
   activeState,
   dirtyCountFields,
+  dirtyRemarksFields,
 }) => {
   const item = items[index];
   if (!item) return null;
@@ -201,9 +293,12 @@ const RowComponent = ({
       </div>
     );
   }
+  const rowBackground = index % 2 !== 0 ? "#F9F9FA" : "#FFFFFF";
 
   return (
-    <div style={{ ...style, ...styles.dataRow }}>
+    <div
+      style={{ ...style, ...styles.dataRow, backgroundColor: rowBackground }}
+    >
       <div style={styles.rowLabel}>{item.label}</div>
       {columns.map((col) => (
         <div key={col.key} style={styles.cellWrapper}>
@@ -212,6 +307,7 @@ const RowComponent = ({
             editable={editable}
             colKey={col.key}
             dirtyCountFields={dirtyCountFields}
+            dirtyRemarksFields={dirtyRemarksFields}
           />
         </div>
       ))}
@@ -226,11 +322,17 @@ const StateTable = ({
   columns,
   editable,
   dirtyCountFields,
+  dirtyRemarksFields,
 }) => {
   const items = useFlattenedData(sections);
   return (
-    <div style={{ display: isActive ? "block" : "none" }}>
-      {/* ✅ No virtualization — all rows stay mounted, RHF never loses registrations */}
+    <div
+      style={{
+        display: isActive ? "block" : "none",
+        maxHeight: "400px",
+        overflowY: "auto",
+      }}
+    >
       {items.map((item, index) => (
         <RowComponent
           key={index}
@@ -241,11 +343,13 @@ const StateTable = ({
           editable={editable}
           activeState={state}
           dirtyCountFields={dirtyCountFields}
+          dirtyRemarksFields={dirtyRemarksFields}
         />
       ))}
     </div>
   );
 };
+
 const ReportTable = ({
   sections,
   columns,
@@ -253,6 +357,7 @@ const ReportTable = ({
   activeState,
   states,
   dirtyCountFields,
+  dirtyRemarksFields,
 }) => (
   <div style={styles.wrapper}>
     <div style={styles.header}>
@@ -272,6 +377,7 @@ const ReportTable = ({
         columns={columns}
         editable={editable}
         dirtyCountFields={dirtyCountFields}
+        dirtyRemarksFields={dirtyRemarksFields}
       />
     ))}
   </div>

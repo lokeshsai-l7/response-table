@@ -10,14 +10,14 @@ function App() {
     states: ["Kerala", "Karnataka"],
     reportDetails: {
       bengaluru: {
-        // Kerala: [
-        //   { rowParameter: "header1", count: 321, remarks: "" },
-        //   { rowParameter: "header2", count: 141, remarks: "" },
-        // ],
-        // Karnataka: [
-        //   { rowParameter: "header1", count: 121, remarks: "" },
-        //   { rowParameter: "header2", count: 121, remarks: "" },
-        // ],
+        Kerala: [
+          { rowParameter: "header1", count: 321, remarks: "test" },
+          { rowParameter: "header2", count: 141, remarks: "" },
+        ],
+        Karnataka: [
+          { rowParameter: "header1", count: 121, remarks: "" },
+          { rowParameter: "header2", count: 121, remarks: "" },
+        ],
       },
     }, // empty on first load (CREATE mode)
   };
